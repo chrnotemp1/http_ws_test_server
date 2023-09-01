@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>TITLE</title>
+</head>
+<body>
+	userId:
+	<div id='userId'></div>
+	<hr>
+	status:
+	<div id='status'></div>
+	<hr>
+	<button id="showBtcPrice">Узнать цену BTC</button>
+	<div id ="price">0.00 $</div>
+	<hr>
+	<hr>
+	<hr>
+	<hr>
+	<div>WORKER STATS:</div>
+	<div id ="worker_stats"></div>
+
+	<script type="text/javascript">
+
+		(function run() {
+			const userId = generateUserId();
+			const userIdElement = document.getElementById('userId');
+			userIdElement.innerHTML = userId;
+
+			const priceElement = document.getElementById('price');
+			const statusElement = document.getElementById('status');
+			const workerStats = document.getElementById('worker_stats');
+
+
+			const socket = new WebSocket("ws://localhost:3001");
+
+			socket.onopen = function(event) {
+				wsStatus('connected via ws');
+				socket.send(JSON.stringify({userId}));
+			};
+
+			socket.onclose = function(event) {
+				if (event.wasClean) wsStatus('connection close'); 
+				else {
+					wsStatus(`connection close with error, ${event.code}`);
+					// реконнект в случае ошибки подключения
+					return setTimeout(run, 1000);
+				} 
+			};
+
+			socket.onmessage = function(event) {
+				const message = JSON.parse(event.data);
+
+				if (message.price) {
+	  				priceElement.innerHTML = `${message.price} $`;
+				}
+				else if (message.workerStat) {
+					let stat = '<b>';
+					let i = 0;
+					for (const workerPid in message.workerStat) {
+						i++;
+						stat+=`${i}): WORKER_PID: ${workerPid} | USERS: ${message.workerStat[workerPid].length} |<br>`;			
+					}
+					stat+='</b>'
+					// message.workerStat.forEach((worker) => {
+
+					// })
+
+					workerStats.innerHTML = `${stat}`;
+				}
+			};
+
+			socket.onerror = function(error) {
+				console.log(error.message);
+			};
+
+			function generateUserId() {
+				return `u_${new Date().getTime()}_${Math.round(Math.random()*1000)}`;
+			};
+
+			function wsStatus(status) {
+				statusElement.innerHTML = status;
+			};
+		})()
+
+		const showBtcPriceButton = document.getElementById('showBtcPrice');
+
+		showBtcPriceButton.onclick = function(event) {
+			const userIdElement = document.getElementById('userId');
+			
+		    fetch('api/get_rate', {
+		    	method : 'POST',
+		    	headers: {
+    				// 'Content-Type': 'application/json;charset=utf-8'
+    				'Content-Type': 'application/json'
+  				},
+  				body: JSON.stringify({
+  					userId: userIdElement.innerHTML,
+  				})
+		    }).then(console.log)
+		}
+	</script>
+</body>
+</html>

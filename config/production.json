@@ -1,0 +1,8 @@
+{
+	"httpServerPort" : 3000,
+	"wsServerPort" : 3001,
+	"btcPriceApiHost" : "https://min-api.cryptocompare.com/data/price?fsym=BTC&tsyms=USD",
+	"disconnectInactiveUsersInterval" : 1000,
+	"checkPriceInterval" : 60000,
+	"workerCount" : 4
+}
